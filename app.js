@@ -55,14 +55,39 @@ function onResults(results) {
     const bodyLandmarks =
       results.poseLandmarks.filter((_, index) => index >= 11);
 
-    drawConnectors(
-      canvasCtx,
-      results.poseLandmarks,
-      POSE_CONNECTIONS,
-      {
-        color: '#00FFAA',
-        lineWidth: 4
-      }
+    drawConnectors(canvasCtx, results.poseLandmarks,
+      [
+        [11, 13], [13, 15]
+      ],
+      { color: '#ff4d4d', lineWidth: 4 } // 왼팔
+    );
+
+    drawConnectors(canvasCtx, results.poseLandmarks,
+      [
+        [12, 14], [14, 16]
+      ],
+      { color: '#4d79ff', lineWidth: 4 } // 오른팔
+    );
+
+    drawConnectors(canvasCtx, results.poseLandmarks,
+      [
+        [23, 25], [25, 27]
+      ],
+      { color: '#4dff88', lineWidth: 4 } // 왼다리
+    );
+
+    drawConnectors(canvasCtx, results.poseLandmarks,
+      [
+        [24, 26], [26, 28]
+      ],
+      { color: '#ffd24d', lineWidth: 4 } // 오른다리
+    );
+
+    drawConnectors(canvasCtx, results.poseLandmarks,
+      [
+        [11, 12], [11, 23], [12, 24], [23, 24]
+      ],
+      { color: '#ffffff', lineWidth: 4 } // 몸통
     );
 
     drawLandmarks(
