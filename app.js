@@ -1,11 +1,88 @@
 /* -------------------------------------------------
-   디버깅용 카메라 초기화
+MediaPipe Pose + 카메라 초기화
 ------------------------------------------------- */
 
 console.log('app.js 실행됨');
 
+// 요소 가져오기
 const videoElement = document.getElementById('video');
+const canvasElement = document.getElementById('output');
+const canvasCtx = canvasElement.getContext('2d');
+
 const placeholder = document.getElementById('placeholder');
+
+/* -------------------------------------------------
+Pose 설정
+------------------------------------------------- */
+
+const pose = new Pose({
+  locateFile: (file) => {
+    return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
+  }
+});
+
+pose.setOptions({
+  modelComplexity: 1,
+  smoothLandmarks: true,
+  enableSegmentation: false,
+
+  // 정확도 향상
+  minDetectionConfidence: 0.7,
+  minTrackingConfidence: 0.7
+});
+
+pose.onResults(onResults);
+
+/* -------------------------------------------------
+결과 그리기
+------------------------------------------------- */
+
+function onResults(results) {
+
+  canvasCtx.save();
+
+  canvasCtx.clearRect(
+    0,
+    0,
+    canvasElement.width,
+    canvasElement.height
+  );
+
+  // 스켈레톤 출력
+  if (results.poseLandmarks) {
+
+    // 얼굴 제외 (11번부터 몸 시작)
+    const bodyLandmarks =
+      results.poseLandmarks.filter((_, index) => index >= 11);
+
+    drawConnectors(
+      canvasCtx,
+      results.poseLandmarks,
+      POSE_CONNECTIONS,
+      {
+        color: '#00FFAA',
+        lineWidth: 4
+      }
+    );
+
+    drawLandmarks(
+      canvasCtx,
+      bodyLandmarks,
+      {
+        color: '#FFFFFF',
+        lineWidth: 2,
+        radius: 5
+      }
+    );
+
+  }
+
+  canvasCtx.restore();
+}
+
+/* -------------------------------------------------
+카메라 시작
+------------------------------------------------- */
 
 async function initCamera() {
 
@@ -21,29 +98,35 @@ async function initCamera() {
 
     videoElement.srcObject = stream;
 
-    // 메타데이터 로드 확인
-    videoElement.onloadedmetadata = () => {
+    videoElement.onloadedmetadata = async () => {
 
       console.log('videoWidth:', videoElement.videoWidth);
       console.log('videoHeight:', videoElement.videoHeight);
 
-      console.log('clientWidth:', videoElement.clientWidth);
-      console.log('clientHeight:', videoElement.clientHeight);
+      // canvas 크기 맞추기
+      canvasElement.width = videoElement.videoWidth;
+      canvasElement.height = videoElement.videoHeight;
 
-    };
+      await videoElement.play();
 
-    // 실제 영상 데이터 로드 후 placeholder 제거
-    videoElement.onloadeddata = () => {
+      console.log('비디오 재생 성공');
 
-      console.log('영상 데이터 로드 완료');
-
+      // placeholder 제거
       placeholder.style.display = 'none';
 
+      // MediaPipe 카메라 시작
+      const camera = new Camera(videoElement, {
+        onFrame: async () => {
+          await pose.send({ image: videoElement });
+        },
+        width: 1280,
+        height: 720
+      });
+
+      camera.start();
+
     };
 
-    await videoElement.play();
-
-    console.log('비디오 재생 성공');
 
   } catch (err) {
 
@@ -55,7 +138,10 @@ async function initCamera() {
   }
 }
 
-// HTML 로드 후 실행
+/* -------------------------------------------------
+시작
+------------------------------------------------- */
+
 window.addEventListener('DOMContentLoaded', () => {
   initCamera();
 });
