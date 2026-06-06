@@ -18,8 +18,12 @@ body {
 /* ---------- 컨테이너 ---------- */
 
 .container {
+
+  position: relative;
+
   width: 100%;
   max-width: 800px;
+
   margin: 0 auto;
 }
 
@@ -62,7 +66,19 @@ h1 {
 /* ---------- 캔버스 ---------- */
 
 #output {
-  display: none;
+
+  position: absolute;
+
+  top: 66px;
+  left: 0;
+
+  width: 100%;
+  height: auto;
+
+  pointer-events: none;
+
+  transform: scaleX(-1);
+
 }
 
 /* ---------- 모바일 ---------- */
